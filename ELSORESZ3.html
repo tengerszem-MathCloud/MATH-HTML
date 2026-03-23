@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matematika Kvíz - Középszint (Értékeléssel)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
+    
+    <style>
+        body { background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div style="text-align: center; margin-top: 20%; font-size: 20px; color: #555;">
+            A teszt betöltése folyamatban...
+        </div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const quizData = [
+            {
+                id: 1, title: "1. feladat: Halmazok",
+                text: "Adott két halmaz: A = {2; 4; 6; 8} és B = {1; 2; 3; 4; 5}. Elemei felsorolásával adja meg a metszet és a különbség halmazt! (A számokat növekvő sorrendben, vesszővel elválasztva írja be!)",
+                inputs: [
+                    { label: "A ∩ B (metszet):", key: "q1_metszet", points: 1, correct: ["2,4", "2;4", "{2;4}"] },
+                    { label: "B \\ A (B mínusz A):", key: "q1_kul", points: 1, correct: ["1,3,5", "1;3;5", "{1;3;5}"] }
+                ]
+            },
+            {
+                id: 2, title: "2. feladat: Százalékszámítás",
+                text: "Egy sportcipő eredeti ára 25 000 Ft. Egy leárazás során az árát 20%-kal csökkentik.",
+                inputs: [
+                    { label: "Mennyi lesz a cipő új ára? (Ft)", key: "q2", points: 2, correct: ["20000", "20 000", "20.000"] }
+                ]
+            },
+            {
+                id: 3, title: "3. feladat: Kombinatorika",
+                text: "Hány különböző háromjegyű számot képezhetünk az 1, 3, 5, 7, 9 számjegyekből, ha egy számjegyet csak egyszer használhatunk fel?",
+                inputs: [
+                    { label: "A képezhető számok darabszáma:", key: "q3", points: 2, correct: ["60"] }
+                ]
+            },
+            {
+                id: 4, title: "4. feladat: Exponenciális egyenlet",
+                text: "Oldja meg a valós számok halmazán: 2^(x-1) = 32",
+                inputs: [
+                    { label: "x értéke:", key: "q4", points: 2, correct: ["6"] }
+                ]
+            },
+            {
+                id: 5, title: "5. feladat: Számrendszerek",
+                text: "Írja fel tízes számrendszerben a kettes számrendszerbeli 10110 számot!",
+                inputs: [
+                    { label: "A tízes számrendszerbeli alak:", key: "q5", points: 2, correct: ["22"] }
+                ]
+            },
+            {
+                id: 6, title: "6. feladat: Sorozatok",
+                text: "Egy mértani sorozat első tagja 3, hányadosa (kvóciense) 2.",
+                inputs: [
+                    { label: "Mennyi a sorozat negyedik tagja (a₄)?", key: "q6_a4", points: 1, correct: ["24"] },
+                    { label: "Mennyi az első 6 tag összege (S₆)?", key: "q6_s6", points: 3, correct: ["189"] }
+                ]
+            },
+            {
+                id: 7, title: "7. feladat: Gráfok",
+                text: "Egy ötpontú egyszerű gráfnak minden csúcspontjából pontosan 2 él indul ki.",
+                inputs: [
+                    { label: "Hány éle van összesen ennek a gráfnak?", key: "q7", points: 3, correct: ["5"] }
+                ]
+            },
+            {
+                id: 8, title: "8. feladat: Geometria",
+                text: "Egy derékszögű háromszög befogói 6 cm és 8 cm hosszúak.",
+                inputs: [
+                    { label: "Mekkora a háromszög átfogója (cm)?", key: "q8_c", points: 1, correct: ["10"] },
+                    { label: "Mekkora a háromszög területe (cm²)?", key: "q8_T", points: 2, correct: ["24"] }
+                ]
+            },
+            {
+                id: 9, title: "9. feladat: Számelmélet",
+                text: "Egy négyjegyű szám 532x alakú. Milyen számjegy(ek) állhat(nak) az x helyén, ha tudjuk, hogy a szám osztható 3-mal?",
+                inputs: [
+                    { label: "A lehetséges számjegy(ek) növekvő sorrendben, vesszővel:", key: "q9", points: 3, correct: ["2,5,8", "2;5;8"] }
+                ]
+            },
+            {
+                id: 10, title: "10. feladat: Koordinátageometria",
+                text: "A derékszögű koordináta-rendszerben adott két pont: A(-1; 3) és B(2; -1).",
+                inputs: [
+                    { label: "Mekkora a két pont távolsága?", key: "q10", points: 3, correct: ["5"] }
+                ]
+            },
+            {
+                id: 11, title: "11. feladat: Trigonometria",
+                text: "Egy derékszögű háromszög átfogója 12 cm hosszú, egyik hegyesszöge 30°.",
+                inputs: [
+                    { label: "Milyen hosszú a 30°-os szöggel szemközti befogó (cm)?", key: "q11", points: 2, correct: ["6"] }
+                ]
+            },
+            {
+                id: 12, title: "12. feladat: Valószínűségszámítás",
+                text: "Egy hagyományos, 52 lapos francia kártyacsomagból találomra kihúzunk egy lapot.",
+                inputs: [
+                    { label: "Mennyi a valószínűsége, hogy a kihúzott lap egy Király? (Törtként!)", key: "q12", points: 2, correct: ["4/52", "1/13"] }
+                ]
+            }
+        ];
+
+        function App() {
+            const [answers, setAnswers] = useState({});
+            const [isSubmitted, setIsSubmitted] = useState(false);
+            const [results, setResults] = useState(null);
+
+            const handleInputChange = (key, value) => {
+                if(!isSubmitted) {
+                    setAnswers({ ...answers, [key]: value });
+                }
+            };
+
+            const calculateScore = () => {
+                let currentScore = 0;
+                let maxScore = 0;
+                let evaluation = {};
+
+                quizData.forEach(q => {
+                    q.inputs.forEach(input => {
+                        maxScore += input.points;
+                        const userAnswer = (answers[input.key] || "").toString().trim().toLowerCase().replace(/\s+/g, '');
+                        const isCorrect = input.correct.some(corr => {
+                            return userAnswer === corr.toLowerCase().replace(/\s+/g, '');
+                        });
+                        
+                        if (isCorrect) currentScore += input.points;
+                        evaluation[input.key] = isCorrect;
+                    });
+                });
+
+                setResults({ currentScore, maxScore, evaluation });
+                setIsSubmitted(true);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            return (
+                <div className="min-h-screen p-4 md:p-8">
+                    <div className="max-w-4xl mx-auto">
+                        
+                        {/* Cím és Bevezető */}
+                        <div className="bg-white rounded-xl shadow-md p-6 mb-6 border-l-8 border-blue-800">
+                            <h1 className="text-3xl font-black text-gray-800 mb-2">Matematika Középszintű Teszt</h1>
+                            <p className="text-gray-600">Oldd meg mind a 12 feladatot! Ha készen vagy, a lap alján kattints a 'Befejeztem' gombra az értékeléshez.</p>
+                        </div>
+
+                        {/* Eredmény Kijelző (Csak beküldés után látszik) */}
+                        {isSubmitted && results && (
+                            <div className="bg-white rounded-xl shadow-2xl p-8 mb-8 text-center fade-in border-t-8 border-green-500">
+                                <h2 className="text-3xl font-bold text-gray-700 uppercase tracking-widest mb-6">
+                                    A teszt eredménye
+                                </h2>
+                                <div className="text-7xl md:text-8xl font-black text-blue-700 my-4 flex justify-center items-baseline">
+                                    <span>{results.currentScore}</span>
+                                    <span className="text-4xl text-gray-400 ml-2">/ {results.maxScore}</span>
+                                </div>
+                                <p className="text-2xl font-bold text-gray-800 mt-4 bg-gray-100 inline-block px-6 py-2 rounded-full">
+                                    Teljesítmény: {Math.round((results.currentScore / results.maxScore) * 100)}%
+                                </p>
+                                <p className="text-lg text-gray-500 mt-8 italic">
+                                    Görgess lefelé, és tekintsd át a feladatokat, hogy lásd, hol hibáztál!
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Kérdések listázása */}
+                        <div className="space-y-6">
+                            {quizData.map((q) => (
+                                <div key={q.id} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                                    <h3 className="text-xl font-bold text-gray-800 mb-3 border-b pb-2">{q.title}</h3>
+                                    <p className="text-lg text-gray-700 mb-5">{q.text}</p>
+                                    
+                                    <div className="space-y-4">
+                                        {q.inputs.map((input) => {
+                                            const isEvaluated = isSubmitted;
+                                            const isCorrect = results?.evaluation[input.key];
+                                            
+                                            let inputClass = "w-full border-2 border-gray-300 rounded-lg p-3 text-lg focus:outline-none focus:border-blue-800 transition-colors";
+                                            if (isEvaluated) {
+                                                inputClass = isCorrect 
+                                                    ? "w-full border-2 border-green-500 bg-green-50 rounded-lg p-3 text-lg font-bold text-green-700"
+                                                    : "w-full border-2 border-red-500 bg-red-50 rounded-lg p-3 text-lg font-bold text-red-700";
+                                            }
+
+                                            return (
+                                                <div key={input.key} className="flex flex-col">
+                                                    <label className="text-gray-800 font-semibold mb-2 flex justify-between">
+                                                        <span>{input.label}</span>
+                                                        <span className="text-sm text-gray-500">({input.points} pont)</span>
+                                                    </label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={answers[input.key] || ""}
+                                                        onChange={(e) => handleInputChange(input.key, e.target.value)}
+                                                        disabled={isSubmitted}
+                                                        className={inputClass}
+                                                        placeholder="Válasz..."
+                                                        autoComplete="off"
+                                                    />
+                                                    {isEvaluated && !isCorrect && (
+                                                        <div className="mt-2 text-sm text-red-700 bg-red-100 p-3 rounded border border-red-200">
+                                                            <strong>Helyes válasz:</strong> {input.correct[0]}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Beküldés Gomb */}
+                        {!isSubmitted && (
+                            <button 
+                                onClick={calculateScore}
+                                className="w-full mt-8 bg-blue-800 hover:bg-blue-900 text-white font-bold py-5 rounded-xl shadow-lg transition-transform transform hover:scale-105 text-xl flex justify-center items-center"
+                            >
+                                Befejeztem a tesztet! (Kiértékelés)
+                            </button>
+                        )}
+
+                        {isSubmitted && (
+                            <div className="mt-8 text-center mb-10">
+                                <button onClick={() => window.location.reload()} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-8 rounded-lg transition-colors text-lg">
+                                    Újrapróbálom a tesztet
+                                </button>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
