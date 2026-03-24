@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matematika Kvíz</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        glass: "rgba(255, 255, 255, 0.4)",
+                        glassBorder: "rgba(255, 255, 255, 0.5)",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            startup: { typeset: false } // A React fogja manuálisan meghívni
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Glassmorphism kártya alapstílus */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+        
+        body {
+            /* Kellemes, pasztell, animált gradiens háttér */
+            background: linear-gradient(-45deg, #e0c3fc, #8ec5fc, #a1c4fd, #c2e9fb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Kérdések adatbázisa
+        const quizData = [
+            {
+                id: 1, points: 2, type: "radio",
+                text: "Sorolja fel a 42 összes pozitív osztóját!",
+                options: [
+                    "1; 2; 3; 6; 7; 14; 21; 42",
+                    "1; 2; 4; 6; 7; 14; 21; 42",
+                    "2; 3; 6; 7; 14; 21",
+                    "1; 3; 6; 7; 14; 21; 42"
+                ],
+                correctAnswer: "1; 2; 3; 6; 7; 14; 21; 42",
+                explanation: "A 42 pozitív osztói: 1; 2; 3; 6; 7; 14; 21; 42."
+            },
+            {
+                id: 2, points: 2, type: "text",
+                text: "Adja meg egy szabályos tízszög belső szögeinek összegét (fokban)!",
+                correctAnswers: ["1440", "1440°", "1440 fok"],
+                explanation: "A belső szögek összegének képlete: $(n-2) \\cdot 180^\\circ$. Behelyettesítve $n=10$ esetén: $8 \\cdot 180^\\circ = 1440^\\circ$."
+            },
+            {
+                id: 3, points: 2, type: "text",
+                text: "Egy baktériumtenyészet tömege nagyjából 15 percenként megduplázódik. Állapítsa meg, hogy hány perc alatt nő tizenhatszorosára a tenyészet tömege!",
+                correctAnswers: ["60", "60 perc"],
+                explanation: "A tizenhatszoros növekedéshez 4 duplázódási periódusra van szükség ($2^4 = 16$). A szükséges idő: $4 \\cdot 15 = 60$ perc."
+            },
+            {
+                id: 4, points: 4, type: "radio",
+                text: "Egy 20 fős osztály matematika dolgozatának eredményei: 3 darab kettes, 6 darab hármas, 7 darab négyes és 4 darab ötös. Határozza meg az adatok átlagát, móduszát és mediánját!",
+                options: [
+                    "Átlag: 3,6; Módusz: 4; Medián: 4",
+                    "Átlag: 3,5; Módusz: 4; Medián: 3,5",
+                    "Átlag: 3,6; Módusz: 7; Medián: 4",
+                    "Átlag: 4; Módusz: 3,6; Medián: 4"
+                ],
+                correctAnswer: "Átlag: 3,6; Módusz: 4; Medián: 4",
+                explanation: "Átlag: $\\frac{3 \\cdot 2 + 6 \\cdot 3 + 7 \\cdot 4 + 4 \\cdot 5}{20} = 3,6$. Módusz: 4 (ebből van 7 db). Medián: 4 (a 10. és 11. elem is 4)."
+            },
+            {
+                id: 5, points: 2, type: "text",
+                text: "Egy 12 fős asztalitenisz-bajnokságon mindenki pontosan egyszer játszik mindenki mással. Hány mérkőzést játszanak összesen?",
+                correctAnswers: ["66", "66 mérkőzés"],
+                explanation: "A mérkőzések száma: $\\binom{12}{2} = \\frac{12 \\cdot 11}{2} = 66$ mérkőzés."
+            },
+            {
+                id: 6, points: 3, type: "radio",
+                text: "Adott két pont a derékszögű koordináta-rendszerben: $A(2; -5)$ és $B(-1; 4)$. Adja meg az $\\vec{AB}$ vektor koordinátáit!",
+                options: [
+                    "$\\vec{AB}(-3; 9)$",
+                    "$\\vec{AB}(3; -9)$",
+                    "$\\vec{AB}(1; -1)$",
+                    "$\\vec{AB}(-1; 9)$"
+                ],
+                correctAnswer: "$\\vec{AB}(-3; 9)$",
+                explanation: "Első koordináta: $-1 - 2 = -3$. Második koordináta: $4 - (-5) = 9$. A vektor tehát: $\\vec{AB}(-3; 9)$."
+            },
+            {
+                id: 7, points: 3, type: "text",
+                text: "Egy dobozban egyforma csavarok vannak. Egy csavar tömege 4,2 gramm. Az üres doboz tömege 35 gramm. A csavarokkal teli doboz tömege 287 gramm. Hány csavar van a dobozban?",
+                correctAnswers: ["60", "60 darab", "60 db"],
+                explanation: "A csavarok össztömege: $287 - 35 = 252$ g. Számuk: $\\frac{252}{4,2} = 60$ darab."
+            },
+            {
+                id: 8, points: 2, type: "radio",
+                text: "Tekintsük a következő állítást: „Ha egy négyszög téglalap, akkor átlói egyenlő hosszúak.” Fogalmazza meg az állítás megfordítását, és adja meg a megfordított állítás logikai értékét!",
+                options: [
+                    "Ha egy négyszög átlói egyenlő hosszúak, akkor a négyszög téglalap. (Hamis)",
+                    "Ha egy négyszög átlói egyenlő hosszúak, akkor a négyszög téglalap. (Igaz)",
+                    "Ha egy négyszög nem téglalap, akkor átlói nem egyenlő hosszúak. (Hamis)",
+                    "Ha egy négyszög átlói nem egyenlő hosszúak, akkor nem téglalap. (Igaz)"
+                ],
+                correctAnswer: "Ha egy négyszög átlói egyenlő hosszúak, akkor a négyszög téglalap. (Hamis)",
+                explanation: "A megfordított állítás: „Ha egy négyszög átlói egyenlő hosszúak, akkor a négyszög téglalap.” Ez hamis, mert például a húrtrapéz átlói is egyenlőek."
+            },
+            {
+                id: 9, points: 2, type: "text",
+                text: "Egy kerékpár árát tavasszal 15%-kal felemelték, így most 138 000 Ft-ba kerül. Mennyi volt a kerékpár ára az emelés előtt?",
+                correctAnswers: ["120000", "120 000", "120.000", "120000 ft", "120 000 ft"],
+                explanation: "Legyen az eredeti ár $x$. Ekkor $x \\cdot 1,15 = 138000$. Ebből az eredeti ár: $x = 120 000$ Ft."
+            },
+            {
+                id: 10, points: 2, type: "text",
+                text: "Egy egyenes egyenlete $3x - 4y = 12$. Hol metszi ez az egyenes az $x$ tengelyt? Adja meg a metszéspont első koordinátáját!",
+                correctAnswers: ["4"],
+                explanation: "Az $x$ tengelyen lévő pontok $y$ koordinátája 0. Behelyettesítve: $3x - 4 \\cdot 0 = 12$, amiből $x = 4$."
+            },
+            {
+                id: 11, points: 2, type: "text",
+                text: "Adja meg a valós számok halmazán értelmezett $g(x) = 3^{x+1} - 2$ függvény helyettesítési értékét, ha $x = 2$.",
+                correctAnswers: ["25"],
+                explanation: "A helyettesítési érték: $g(2) = 3^{2+1} - 2 = 3^3 - 2 = 27 - 2 = 25$."
+            },
+            {
+                id: 12, points: 4, type: "text",
+                text: "A kétjegyű pozitív egész számok közül véletlenszerűen kiválasztunk egyet. Határozza meg annak a valószínűségét, hogy a szám számjegyeinek összege pontosan 10!",
+                correctAnswers: ["1/10", "0.1", "0,1", "10%", "9/90"],
+                explanation: "Összes kétjegyű szám: 90 db. Kedvező esetek (19, 28, 37, 46, 55, 64, 73, 82, 91): 9 db. Keresett valószínűség: $P = \\frac{9}{90} = \\frac{1}{10}$ (vagy 10%)."
+            }
+        ];
+
+        const App = () => {
+            const [answers, setAnswers] = useState({});
+            const [isSubmitted, setIsSubmitted] = useState(false);
+            const [score, setScore] = useState(0);
+
+            const totalPoints = quizData.reduce((acc, q) => acc + q.points, 0);
+
+            // MathJax frissítése renderelés után
+            useEffect(() => {
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise();
+                }
+            }); // Nincs dependency array, így minden render után lefut
+
+            // Válasz ellenőrző logika
+            const checkAnswer = (question, userAnswer) => {
+                if (!userAnswer) return false;
+                
+                if (question.type === "radio") {
+                    return userAnswer === question.correctAnswer;
+                } else {
+                    // Szöveges válasz tisztítása (szóközök eltávolítása, kisbetűsítés)
+                    const cleanUser = userAnswer.toLowerCase().replace(/\s/g, '');
+                    return question.correctAnswers.some(ans => 
+                        ans.toLowerCase().replace(/\s/g, '') === cleanUser
+                    );
+                }
+            };
+
+            const handleInputChange = (questionId, value) => {
+                if(isSubmitted) return;
+                setAnswers({ ...answers, [questionId]: value });
+            };
+
+            const handleSubmit = () => {
+                let currentScore = 0;
+                quizData.forEach(q => {
+                    if (checkAnswer(q, answers[q.id])) {
+                        currentScore += q.points;
+                    }
+                });
+                setScore(currentScore);
+                setIsSubmitted(true);
+            };
+
+            const scorePercentage = Math.round((score / totalPoints) * 100) || 0;
+
+            return (
+                <div className="max-w-4xl mx-auto pb-12">
+                    {/* Fejléc és Progress Bar (Ragadós) */}
+                    <div className="sticky top-4 z-50 glass-card rounded-2xl p-6 mb-8 text-center transition-all duration-500">
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2">Matematika Érettségi Kvíz</h1>
+                        
+                        {isSubmitted ? (
+                            <div className="mt-4">
+                                <div className="text-2xl font-semibold mb-2 text-indigo-900">
+                                    Eredmény: {score} / {totalPoints} pont ({scorePercentage}%)
+                                </div>
+                                <div className="w-full bg-white/50 rounded-full h-4">
+                                    <div 
+                                        className="bg-indigo-500 h-4 rounded-full transition-all duration-1000 ease-out" 
+                                        style={{ width: `${scorePercentage}%` }}>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-slate-600 font-medium">Töltsd ki a feladatokat, majd nyomd meg a Kiértékelés gombot a lap alján!</p>
+                        )}
+                    </div>
+
+                    {/* Kérdések listája */}
+                    <div className="space-y-6">
+                        {quizData.map((q, index) => {
+                            const userAnswer = answers[q.id] || "";
+                            const isCorrect = isSubmitted ? checkAnswer(q, userAnswer) : null;
+                            
+                            let cardBorder = "border-white/40";
+                            if (isSubmitted) {
+                                cardBorder = isCorrect ? "border-green-400 bg-green-50/20" : "border-red-400 bg-red-50/20";
+                            }
+
+                            return (
+                                <div key={q.id} className={`glass-card rounded-2xl p-6 transition-all duration-300 ${cardBorder}`}>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h2 className="text-lg font-bold text-slate-800 flex-1">
+                                            {index + 1}. feladat
+                                        </h2>
+                                        <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded ml-3">
+                                            {q.points} pont
+                                        </span>
+                                    </div>
+                                    
+                                    <p className="text-slate-700 mb-5 text-lg" dangerouslySetInnerHTML={{ __html: q.text }} />
+
+                                    {/* Bemeneti mezők */}
+                                    <div className="mb-4">
+                                        {q.type === "text" ? (
+                                            <input 
+                                                type="text" 
+                                                disabled={isSubmitted}
+                                                value={userAnswer}
+                                                onChange={(e) => handleInputChange(q.id, e.target.value)}
+                                                placeholder="Írd ide a válaszod..."
+                                                className="w-full md:w-1/2 px-4 py-2 rounded-lg border border-white/50 bg-white/50 focus:bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors disabled:opacity-70"
+                                            />
+                                        ) : (
+                                            <div className="flex flex-col space-y-3">
+                                                {q.options.map((opt, i) => (
+                                                    <label key={i} className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${userAnswer === opt ? 'bg-indigo-100/60 border-indigo-300' : 'bg-white/30 border-white/40 hover:bg-white/50'} ${isSubmitted && 'cursor-default'}`}>
+                                                        <input 
+                                                            type="radio" 
+                                                            name={`question-${q.id}`}
+                                                            value={opt}
+                                                            checked={userAnswer === opt}
+                                                            disabled={isSubmitted}
+                                                            onChange={(e) => handleInputChange(q.id, e.target.value)}
+                                                            className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 focus:ring-indigo-500"
+                                                        />
+                                                        <span dangerouslySetInnerHTML={{ __html: opt }} className="text-slate-700" />
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Visszajelzés beküldés után */}
+                                    {isSubmitted && (
+                                        <div className={`mt-4 p-4 rounded-xl ${isCorrect ? 'bg-green-100/70 border border-green-200' : 'bg-red-100/70 border border-red-200'}`}>
+                                            <div className="flex items-center mb-2">
+                                                <span className="text-xl mr-2">{isCorrect ? '✅' : '❌'}</span>
+                                                <span className={`font-bold ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                                                    {isCorrect ? `Helyes válasz! Megkaptad a ${q.points} pontot.` : 'Helytelen válasz!'}
+                                                </span>
+                                            </div>
+                                            <div className="text-slate-700 mt-2">
+                                                <strong className="block mb-1">Javítási útmutató / Magyarázat:</strong>
+                                                <span dangerouslySetInnerHTML={{ __html: q.explanation }} />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Kiértékelés gomb */}
+                    {!isSubmitted && (
+                        <div className="mt-8 text-center">
+                            <button 
+                                onClick={handleSubmit}
+                                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 text-xl"
+                            >
+                                Kiértékelés
+                            </button>
+                        </div>
+                    )}
+                    
+                    {/* Újraindítás gomb */}
+                    {isSubmitted && (
+                        <div className="mt-8 text-center">
+                            <button 
+                                onClick={() => window.location.reload()}
+                                className="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-10 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 text-xl"
+                            >
+                                Újrapróbálom
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
