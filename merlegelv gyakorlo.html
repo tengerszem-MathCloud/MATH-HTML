@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mérlegelv Mesterkurzus</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .instructions {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        .progress {
+            text-align: center;
+            font-weight: bold;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .equation-box {
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            background-color: #2c3e50;
+            color: #fff;
+            border-radius: 10px;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+        .step {
+            margin-bottom: 20px;
+        }
+        .step label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #34495e;
+        }
+        .step input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        .step input[type="text"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .result-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .result-row span {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .result-row input {
+            width: 120px !important;
+            text-align: center;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.3s;
+        }
+        button:active {
+            transform: scale(0.97);
+        }
+        #checkBtn {
+            background-color: #27ae60;
+            color: white;
+            width: 100%;
+        }
+        #nextBtn {
+            background-color: #3498db;
+            color: white;
+            width: 100%;
+            display: none;
+        }
+        #feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+            line-height: 1.5;
+        }
+        .success {
+            background-color: #d4efdf;
+            color: #1e8449;
+            border: 1px solid #1e8449;
+        }
+        .error {
+            background-color: #fadbd8;
+            color: #c0392b;
+            border: 1px solid #c0392b;
+        }
+        /* Confetti effect placeholder */
+        .completed-msg {
+            text-align: center;
+            font-size: 1.5em;
+            color: #27ae60;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="game-container">
+    <h1>⚖️ Mérlegelv Mester</h1>
+    
+    <div class="instructions">
+        <b>💡 Fontos szabályok:</b><br>
+        1. Ne írj szóközt a szám és az x közé (helyes: <i>2x</i>, helytelen: <i>2 x</i>)!<br>
+        2. Az x-es tagot mindig a szám elé írd (helyes: <i>2x+5=10</i>, helytelen: <i>5+2x=10</i>)!<br>
+        3. A 2. lépésnél mindig a <b>kisebb x-et</b> vedd el mindkét oldalból!
+    </div>
+
+    <div class="progress" id="progressText">Feladat: 1 / 20</div>
+    <div class="equation-box" id="equationDisplay">Betöltés...</div>
+
+    <div class="step">
+        <label>1. Lépés (Zárójelbontás utáni alak):</label>
+        <input type="text" id="step1" placeholder="pl. ax+b=cx+d" autocomplete="off">
+    </div>
+
+    <div class="step">
+        <label>2. Lépés (A kisebb 'x' elvétele utáni alak):</label>
+        <input type="text" id="step2" placeholder="pl. ax+b=c" autocomplete="off">
+    </div>
+
+    <div class="step">
+        <label>3. Lépés (Végeredmény):</label>
+        <div class="result-row">
+            <span>x =</span>
+            <input type="text" id="step3" placeholder="szám..." autocomplete="off">
+        </div>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div class="btn-container">
+        <button id="checkBtn" onclick="checkAnswer()">Ellenőrzés ✔️</button>
+        <button id="nextBtn" onclick="nextQuestion()">Következő feladat ➡️</button>
+    </div>
+</div>
+
+<script>
+    // A 20 feladat adatbázisa
+    const questions = [
+        { eq: "2(x + 4) = x + 12", s1: "2x+8=x+12", s2: "x+8=12", ans: "4" },
+        { eq: "3(x - 2) = 2x + 1", s1: "3x-6=2x+1", s2: "x-6=1", ans: "7" },
+        { eq: "4(x + 1) = 2x + 10", s1: "4x+4=2x+10", s2: "2x+4=10", ans: "3" },
+        { eq: "5(2x - 1) = 8x + 3", s1: "10x-5=8x+3", s2: "2x-5=3", ans: "4" },
+        { eq: "3(3x - 2) = 7x + 4", s1: "9x-6=7x+4", s2: "2x-6=4", ans: "5" },
+        { eq: "2(4x + 1) = 6x + 12", s1: "8x+2=6x+12", s2: "2x+2=12", ans: "5" },
+        { eq: "5(x - 3) = 3x - 1", s1: "5x-15=3x-1", s2: "2x-15=-1", ans: "7" },
+        { eq: "6(x + 2) = 4x + 22", s1: "6x+12=4x+22", s2: "2x+12=22", ans: "5" },
+        { eq: "3(4x - 5) = 10x - 1", s1: "12x-15=10x-1", s2: "2x-15=-1", ans: "7" },
+        { eq: "2(5x - 4) = 7x + 1", s1: "10x-8=7x+1", s2: "3x-8=1", ans: "3" },
+        { eq: "6x - 2 = 2(2x + 3)", s1: "6x-2=4x+6", s2: "2x-2=6", ans: "4" },
+        { eq: "5x + 7 = 3(x + 7)", s1: "5x+7=3x+21", s2: "2x+7=21", ans: "7" },
+        { eq: "4x + 21 = 3(2x + 3)", s1: "4x+21=6x+9", s2: "21=2x+9", ans: "6" }, // Vagy 2x+9=21
+        { eq: "7x - 8 = 4(x - 2)", s1: "7x-8=4x-8", s2: "3x-8=-8", ans: "0" },
+        { eq: "8x + 5 = 3(2x + 5)", s1: "8x+5=6x+15", s2: "2x+5=15", ans: "5" },
+        { eq: "4x + 10 = 2(x + 8)", s1: "4x+10=2x+16", s2: "2x+10=16", ans: "3" },
+        { eq: "9x - 4 = 5(x + 4)", s1: "9x-4=5x+20", s2: "4x-4=20", ans: "6" },
+        { eq: "7x + 2 = 3(x + 6)", s1: "7x+2=3x+18", s2: "4x+2=18", ans: "4" },
+        { eq: "8x - 15 = 3(2x - 1)", s1: "8x-15=6x-3", s2: "2x-15=-3", ans: "6" },
+        { eq: "11x + 3 = 4(2x + 3)", s1: "11x+3=8x+12", s2: "3x+3=12", ans: "3" }
+    ];
+
+    let currentIndex = 0;
+
+    // Normalizáló függvény: kiszedi a szóközöket, kisbetűsít
+    function normalize(str) {
+        return str.replace(/\s+/g, '').toLowerCase();
+    }
+
+    // Egyenlet ellenőrző: elfogadja ha a bal és jobb oldal fel van cserélve
+    function checkEquation(input, expected) {
+        let nInput = normalize(input);
+        let nExpected = normalize(expected);
+        
+        // Sima egyezés
+        if (nInput === nExpected) return true;
+        
+        // Felcserélt egyezés (pl. 21=2x+9 és 2x+9=21 ugyanaz)
+        let expectedParts = nExpected.split('=');
+        if (expectedParts.length === 2) {
+            let reversedExpected = expectedParts[1] + '=' + expectedParts[0];
+            if (nInput === reversedExpected) return true;
+        }
+        return false;
+    }
+
+    function loadQuestion() {
+        if (currentIndex >= questions.length) {
+            document.getElementById('game-container').innerHTML = `
+                <h1>🎉 Gratulálok!</h1>
+                <div class="completed-msg">Sikeresen megoldottad mind a 20 feladatot! Te vagy a Mérlegelv igazi Mestere! 🥷</div>
+            `;
+            return;
+        }
+
+        let q = questions[currentIndex];
+        document.getElementById('progressText').innerText = `Feladat: ${currentIndex + 1} / 20`;
+        document.getElementById('equationDisplay').innerText = q.eq;
+        
+        // Mezők ürítése
+        document.getElementById('step1').value = "";
+        document.getElementById('step2').value = "";
+        document.getElementById('step3').value = "";
+        
+        // Gombok és visszajelzések alaphelyzetbe
+        document.getElementById('feedback').style.display = "none";
+        document.getElementById('nextBtn').style.display = "none";
+        document.getElementById('checkBtn').style.display = "block";
+    }
+
+    function checkAnswer() {
+        let s1 = document.getElementById('step1').value;
+        let s2 = document.getElementById('step2').value;
+        let s3 = document.getElementById('step3').value;
+        let q = questions[currentIndex];
+
+        let isS1Correct = checkEquation(s1, q.s1);
+        let isS2Correct = checkEquation(s2, q.s2);
+        let isS3Correct = normalize(s3) === q.ans;
+
+        let feedbackBox = document.getElementById('feedback');
+        feedbackBox.style.display = "block";
+
+        if (isS1Correct && isS2Correct && isS3Correct) {
+            feedbackBox.className = "success";
+            feedbackBox.innerHTML = "✅ <b>Tökéletes!</b> Minden lépésed hibátlan.";
+            document.getElementById('checkBtn').style.display = "none";
+            document.getElementById('nextBtn').style.display = "block";
+        } else {
+            feedbackBox.className = "error";
+            let errorMsg = "❌ <b>Valahol hiba csúszott a gépezetbe:</b><br>";
+            if (!isS1Correct) errorMsg += "👉 Az 1. lépés (Zárójelbontás) nem jó alakú.<br>";
+            if (!isS2Correct) errorMsg += "👉 A 2. lépés (Kisebb x elvétele) utáni alak nem jó.<br>";
+            if (!isS3Correct) errorMsg += "👉 A végeredmény nem stimmel.<br>";
+            feedbackBox.innerHTML = errorMsg;
+        }
+    }
+
+    function nextQuestion() {
+        currentIndex++;
+        loadQuestion();
+    }
+
+    // Enter gomb lenyomására is induljon az ellenőrzés
+    document.addEventListener("keyup", function(event) {
+        if (event.key === "Enter") {
+            if (document.getElementById('checkBtn').style.display !== "none") {
+                checkAnswer();
+            } else if (document.getElementById('nextBtn').style.display !== "none") {
+                nextQuestion();
+            }
+        }
+    });
+
+    // Indítás
+    window.onload = loadQuestion;
+</script>
+
+</body>
+</html>
