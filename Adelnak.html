@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Algebrai Kifejezések Gyakorló</title>
+    <title>Algebrai Kifejezések Gyakorló (20 feladat)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -95,12 +95,12 @@
     
     <div class="container">
         <div id="quiz-completed" style="display: none; text-align: center;">
-            <h2>🎉 Gratulálok, az összes feladatot megoldottad! 🎉</h2>
-            <p>Most már készen állsz a témazáróra!</p>
+            <h2>🎉 Gratulálok, mind a 20 feladatot megoldottad! 🎉</h2>
+            <p>Ezzel a tudással a témazáró 1. és 2. szintje már garantáltan hibátlan lesz!</p>
         </div>
 
         <div id="quiz-area">
-            <h3 id="question-counter">Feladat: 1 / 5</h3>
+            <h3 id="question-counter">Feladat: 1 / 20</h3>
             <div class="expression-box" id="expression-display"></div>
 
             <div id="step1" class="step active">
@@ -130,46 +130,29 @@
 
     <script>
         const questions = [
-            {
-                expr: "3(x + 4) - 5",
-                varName: "x",
-                subVal: 2,
-                ans1: ["3x+12-5"],
-                ans2: ["3x+7", "7+3x"],
-                ans3: ["13"]
-            },
-            {
-                expr: "5(2y + 3) - 6y",
-                varName: "y",
-                subVal: 1,
-                ans1: ["10y+15-6y"],
-                ans2: ["4y+15", "15+4y"],
-                ans3: ["19"]
-            },
-            {
-                expr: "20 - 4(x - 2)",
-                varName: "x",
-                subVal: 3,
-                ans1: ["20-4x+8", "-4x+20+8"],
-                ans2: ["28-4x", "-4x+28"],
-                ans3: ["16"]
-            },
-            {
-                expr: "5x - 2(x + 4)",
-                varName: "x",
-                subVal: 5,
-                ans1: ["5x-2x-8"],
-                ans2: ["3x-8", "-8+3x"],
-                ans3: ["7"]
-            },
-            {
-                expr: "7a - 5(a - 3) - 10",
-                varName: "a",
-                subVal: -2,
-                ans1: ["7a-5a+15-10"],
-                ans2: ["2a+5", "5+2a"],
-                ans3: ["1"]
-            }
+            // 1. SZINT: Bemelegítés
+            { expr: "3(x + 4) - 5", varName: "x", subVal: 2, ans1: ["3x+12-5"], ans2: ["3x+7", "7+3x"], ans3: ["13"] },
+            { expr: "5(2y + 3) - 6y", varName: "y", subVal: 1, ans1: ["10y+15-6y"], ans2: ["4y+15", "15+4y"], ans3: ["19"] },
+            { expr: "4(b - 2) + 10", varName: "b", subVal: 5, ans1: ["4b-8+10"], ans2: ["4b+2", "2+4b"], ans3: ["22"] },
+            { expr: "2(3a - 1) + 4a", varName: "a", subVal: 3, ans1: ["6a-2+4a", "4a+6a-2"], ans2: ["10a-2", "-2+10a"], ans3: ["28"] },
+            { expr: "6(2x + 1) - 3x", varName: "x", subVal: -1, ans1: ["12x+6-3x"], ans2: ["9x+6", "6+9x"], ans3: ["-3"] },
+            { expr: "2(4m - 3) + 5", varName: "m", subVal: 2, ans1: ["8m-6+5"], ans2: ["8m-1", "-1+8m"], ans3: ["15"] },
+            { expr: "3(a + 5) + 2a - 7", varName: "a", subVal: 4, ans1: ["3a+15+2a-7"], ans2: ["5a+8", "8+5a"], ans3: ["28"] },
+            { expr: "5(x - 2) + 3x - 4", varName: "x", subVal: 2, ans1: ["5x-10+3x-4"], ans2: ["8x-14", "-14+8x"], ans3: ["2"] },
+            { expr: "4(2b + 3) - 5b + 2", varName: "b", subVal: 4, ans1: ["8b+12-5b+2"], ans2: ["3b+14", "14+3b"], ans3: ["26"] },
+            { expr: "2(x + 5) + 4(x - 1)", varName: "x", subVal: 2, ans1: ["2x+10+4x-4"], ans2: ["6x+6", "6+6x"], ans3: ["18"] },
+            
+            // 2. SZINT: Mínuszos csapdák
+            { expr: "20 - 4(x - 2)", varName: "x", subVal: 3, ans1: ["20-4x+8", "-4x+20+8"], ans2: ["28-4x", "-4x+28"], ans3: ["16"] },
+            { expr: "5x - 2(x + 4)", varName: "x", subVal: 5, ans1: ["5x-2x-8"], ans2: ["3x-8", "-8+3x"], ans3: ["7"] },
+            { expr: "12 - 3(2y - 1)", varName: "y", subVal: 2, ans1: ["12-6y+3", "-6y+12+3"], ans2: ["15-6y", "-6y+15"], ans3: ["3"] },
+            { expr: "7a - 5(a - 3) - 10", varName: "a", subVal: -2, ans1: ["7a-5a+15-10"], ans2: ["2a+5", "5+2a"], ans3: ["1"] },
+            { expr: "18 - 2(3b + 4) + b", varName: "b", subVal: 1, ans1: ["18-6b-8+b"], ans2: ["10-5b", "-5b+10"], ans3: ["5"] },
+            { expr: "8x - 3(2x - 5) - 15", varName: "x", subVal: 4, ans1: ["8x-6x+15-15"], ans2: ["2x"], ans3: ["8"] },
+            { expr: "25 - 5(m - 2) + 2m", varName: "m", subVal: 3, ans1: ["25-5m+10+2m"], ans2: ["35-3m", "-3m+35"], ans3: ["26"] },
+            { expr: "9y - 4(2y + 3) + 12", varName: "y", subVal: -1, ans1: ["9y-8y-12+12"], ans2: ["y", "1y"], ans3: ["-1"] },
+            { expr: "30 - 6(x - 1) - 2x", varName: "x", subVal: 3, ans1: ["30-6x+6-2x"], ans2: ["36-8x", "-8x+36"], ans3: ["12"] },
+            { expr: "14 - 3(x + 2) + 4x", varName: "x", subVal: -5, ans1: ["14-3x-6+4x"], ans2: ["x+8", "1x+8", "8+x"], ans3: ["3"] }
         ];
 
         let currentQIndex = 0;
@@ -222,7 +205,7 @@
                 if (userInput === "") {
                     feedbackEl.innerText = "⚠️ Nem írtál be semmit!";
                 } else {
-                    feedbackEl.innerText = "❌ Valami nem stimmel, próbáld újra! (Figyelj az előjelekre!)";
+                    feedbackEl.innerText = "❌ Valami nem stimmel, próbáld újra! (Figyelj az előjelekre és betűkre!)";
                 }
                 feedbackEl.className = "feedback incorrect";
             }
