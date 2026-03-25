@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algebrai Kifejezések Gyakorló</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .expression-box {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #3498db;
+            margin-bottom: 20px;
+        }
+        .step {
+            display: none;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 5px solid #f39c12;
+            background-color: #fffdf7;
+        }
+        .step.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        input[type="text"] {
+            font-size: 18px;
+            padding: 8px;
+            width: 60%;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            font-size: 18px;
+            padding: 8px 15px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #27ae60;
+        }
+        .feedback {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+        .correct { color: #2ecc71; }
+        .incorrect { color: #e74c3c; }
+        
+        #nextQuestionBtn {
+            display: none;
+            width: 100%;
+            background-color: #3498db;
+            margin-top: 20px;
+            padding: 15px;
+            font-size: 20px;
+        }
+        #nextQuestionBtn:hover { background-color: #2980b9; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🕵️‍♂️ Algebrai Kódfejtő Kiképzés</h1>
+    
+    <div class="container">
+        <div id="quiz-completed" style="display: none; text-align: center;">
+            <h2>🎉 Gratulálok, az összes feladatot megoldottad! 🎉</h2>
+            <p>Most már készen állsz a témazáróra!</p>
+        </div>
+
+        <div id="quiz-area">
+            <h3 id="question-counter">Feladat: 1 / 5</h3>
+            <div class="expression-box" id="expression-display"></div>
+
+            <div id="step1" class="step active">
+                <label><strong>1. Lépés: Bontsd fel a zárójelet!</strong> (Ne vonj még össze!)</label><br><br>
+                <input type="text" id="input1" placeholder="pl: 4x+10-2">
+                <button onclick="checkStep(1)">Ellenőrzés</button>
+                <span id="feedback1" class="feedback"></span>
+            </div>
+
+            <div id="step2" class="step">
+                <label><strong>2. Lépés: Vond össze az egynemű tagokat!</strong> (Hozd a legegyszerűbb alakra!)</label><br><br>
+                <input type="text" id="input2" placeholder="pl: 4x+8">
+                <button onclick="checkStep(2)">Ellenőrzés</button>
+                <span id="feedback2" class="feedback"></span>
+            </div>
+
+            <div id="step3" class="step">
+                <label><strong>3. Lépés: Behelyettesítés!</strong> <br><span id="sub-text" style="color: #2980b9; font-size: 20px;"></span></label><br><br>
+                <input type="text" id="input3" placeholder="Végeredmény számmal">
+                <button onclick="checkStep(3)">Ellenőrzés</button>
+                <span id="feedback3" class="feedback"></span>
+            </div>
+
+            <button id="nextQuestionBtn" onclick="loadNextQuestion()">Következő Feladat ➡️</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                expr: "3(x + 4) - 5",
+                varName: "x",
+                subVal: 2,
+                ans1: ["3x+12-5"],
+                ans2: ["3x+7", "7+3x"],
+                ans3: ["13"]
+            },
+            {
+                expr: "5(2y + 3) - 6y",
+                varName: "y",
+                subVal: 1,
+                ans1: ["10y+15-6y"],
+                ans2: ["4y+15", "15+4y"],
+                ans3: ["19"]
+            },
+            {
+                expr: "20 - 4(x - 2)",
+                varName: "x",
+                subVal: 3,
+                ans1: ["20-4x+8", "-4x+20+8"],
+                ans2: ["28-4x", "-4x+28"],
+                ans3: ["16"]
+            },
+            {
+                expr: "5x - 2(x + 4)",
+                varName: "x",
+                subVal: 5,
+                ans1: ["5x-2x-8"],
+                ans2: ["3x-8", "-8+3x"],
+                ans3: ["7"]
+            },
+            {
+                expr: "7a - 5(a - 3) - 10",
+                varName: "a",
+                subVal: -2,
+                ans1: ["7a-5a+15-10"],
+                ans2: ["2a+5", "5+2a"],
+                ans3: ["1"]
+            }
+        ];
+
+        let currentQIndex = 0;
+
+        function normalizeString(str) {
+            return str.replace(/\s+/g, '').toLowerCase();
+        }
+
+        function loadQuestion() {
+            for(let i=1; i<=3; i++) {
+                document.getElementById('input'+i).value = '';
+                document.getElementById('input'+i).disabled = false;
+                document.getElementById('feedback'+i).innerText = '';
+                document.getElementById('step'+i).classList.remove('active');
+            }
+            document.getElementById('nextQuestionBtn').style.display = 'none';
+
+            let q = questions[currentQIndex];
+            document.getElementById('question-counter').innerText = `Feladat: ${currentQIndex + 1} / ${questions.length}`;
+            document.getElementById('expression-display').innerText = q.expr;
+            document.getElementById('sub-text').innerHTML = `Mennyi a kifejezés értéke, ha <b>${q.varName} = ${q.subVal}</b> ?`;
+            
+            document.getElementById('step1').classList.add('active');
+        }
+
+        function checkStep(stepNum) {
+            let q = questions[currentQIndex];
+            let userInput = normalizeString(document.getElementById('input' + stepNum).value);
+            let feedbackEl = document.getElementById('feedback' + stepNum);
+            let inputEl = document.getElementById('input' + stepNum);
+            
+            let correctAnswers = [];
+            if(stepNum === 1) correctAnswers = q.ans1;
+            if(stepNum === 2) correctAnswers = q.ans2;
+            if(stepNum === 3) correctAnswers = q.ans3;
+
+            let isCorrect = correctAnswers.some(ans => normalizeString(ans) === userInput);
+
+            if (isCorrect) {
+                feedbackEl.innerText = "✅ Helyes! Mehetsz a következő lépésre.";
+                feedbackEl.className = "feedback correct";
+                inputEl.disabled = true;
+
+                if (stepNum < 3) {
+                    document.getElementById('step' + (stepNum + 1)).classList.add('active');
+                } else {
+                    document.getElementById('nextQuestionBtn').style.display = 'block';
+                }
+            } else {
+                if (userInput === "") {
+                    feedbackEl.innerText = "⚠️ Nem írtál be semmit!";
+                } else {
+                    feedbackEl.innerText = "❌ Valami nem stimmel, próbáld újra! (Figyelj az előjelekre!)";
+                }
+                feedbackEl.className = "feedback incorrect";
+            }
+        }
+
+        function loadNextQuestion() {
+            currentQIndex++;
+            if (currentQIndex < questions.length) {
+                loadQuestion();
+            } else {
+                document.getElementById('quiz-area').style.display = 'none';
+                document.getElementById('quiz-completed').style.display = 'block';
+            }
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
