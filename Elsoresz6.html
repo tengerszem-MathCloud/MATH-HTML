@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matematika Feladatsor - 3. verzió</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        glass: "rgba(255, 255, 255, 0.4)",
+                        glassBorder: "rgba(255, 255, 255, 0.5)",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            startup: { typeset: false }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+        
+        body {
+            background: linear-gradient(-45deg, #e0c3fc, #8ec5fc, #a1c4fd, #c2e9fb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const quizData = [
+            {
+                id: 1, points: 2,
+                text: "Az $A$ és $B$ halmazokról tudjuk, hogy $A \\cup B = \\{1; 2; 3; 4; 5\\}$, $A \\cap B = \\{3; 4\\}$ és $B \\setminus A = \\{5\\}$. Adja meg az $A$ és $B$ halmazokat elemeik felsorolásával! <br><span class='text-sm text-indigo-700 font-semibold'>(Utasítás: A választ \"A: elemek és B: elemek\" formátumban adja meg pontosvesszőkkel! Pl: A: 1; 2 és B: 3)</span>",
+                correctAnswers: ["a:1;2;3;4ésb:3;4;5", "a:1,2,3,4ésb:3,4,5", "a={1;2;3;4}ésb={3;4;5}", "a:1;2;3;4,b:3;4;5", "a:1;2;3;4;b:3;4;5"],
+                explanation: "Az $A$ halmaz elemei: 1; 2; 3; 4. A $B$ halmaz elemei: 3; 4; 5."
+            },
+            {
+                id: 2, points: 2,
+                text: "Egy derékszögű háromszög átfogója 13 cm, egyik befogója 5 cm hosszú. Hány cm hosszú a másik befogó?",
+                correctAnswers: ["12", "12cm", "12 cm"],
+                explanation: "A Pitagorasz-tétel alapján: $13^2 = 5^2 + b^2$. Ebből $169 = 25 + b^2 \\rightarrow b^2 = 144$, tehát a befogó hossza 12 cm."
+            },
+            {
+                id: 3, points: 2,
+                text: "Hány darab háromjegyű, különböző számjegyekből álló páros szám alkotható az 1, 2, 3, 4 számjegyekből?",
+                correctAnswers: ["12", "12 db", "12 darab"],
+                explanation: "Az utolsó számjegy csak 2 vagy 4 lehet (2 lehetőség). A maradék két helyre a megmaradt 3 számjegyből választhatunk ($3 \\cdot 2$ lehetőség). Összesen: $3 \\cdot 2 \\cdot 2 = 12$ darab."
+            },
+            {
+                id: 4, points: 2,
+                text: "Egy webshopban tavaly 400 darab fülhallgatót adtak el, idén pedig 500 darabot. Hány százalékkal nőtt az eladott fülhallgatók száma a tavalyi évhez képest?",
+                correctAnswers: ["25", "25%", "25 %", "25százalék", "25 százalék"],
+                explanation: "A növekedés $500 - 400 = 100$ darab. A 100 a 400-nak a negyede, tehát a növekedés 25%-os."
+            },
+            {
+                id: 5, points: 2,
+                text: "Adja meg az $x$ értékét, ha tudjuk, hogy $x^{\\frac{1}{3}} = 3$.",
+                correctAnswers: ["27", "x=27", "x = 27"],
+                explanation: "A törtkitevőjű hatvány azonossága alapján $\\sqrt[3]{x} = 3$. Mindkét oldalt köbre emelve: $x = 3^3 = 27$."
+            },
+            {
+                id: 6, points: 4,
+                text: "Egy számtani sorozat ötödik tagja 12-vel nagyobb, mint a második tagja. A sorozat negyedik tagja 10. Számítsa ki a sorozat első 4 tagjának összegét ($S_4$)! <br><span class='text-sm text-indigo-700 font-semibold'>(Utasítás: Csak a végeredményt írja be!)</span>",
+                correctAnswers: ["16", "s4=16", "s_4=16"],
+                explanation: "$a_5 - a_2 = 3d = 12 \\rightarrow d = 4$. $a_4 = a_1 + 3d \\rightarrow 10 = a_1 + 12 \\rightarrow a_1 = -2$. Az első négy tag: -2; 2; 6; 10. Az összeg: $S_4 = 16$."
+            },
+            {
+                id: 7, points: 3,
+                text: "Hány csúcsa, hány lapja és hány éle van egy ötszög alapú egyenes hasábnak? <br><span class='text-sm text-indigo-700 font-semibold'>(Utasítás: A csúcsok, lapok és élek számát pontosvesszővel elválasztva adja meg ebben a sorrendben! Pl: 8; 6; 12)</span>",
+                correctAnswers: ["10; 7; 15", "10, 7, 15", "10;7;15", "10,7,15", "10csúcs,7lap,15él"],
+                explanation: "A csúcsok száma: 10. A lapok száma: 7 (2 alaplap + 5 oldallap). Az élek száma: 15."
+            },
+            {
+                id: 8, points: 2,
+                text: "Egy szám 3-as alapú logaritmusa 4. Mennyi a szám háromszorosának a 3-as alapú logaritmusa?",
+                correctAnswers: ["5"],
+                explanation: "A logaritmus azonossága alapján: $\\log_3(3x) = \\log_3(3) + \\log_3(x) = 1 + 4 = 5$."
+            },
+            {
+                id: 9, points: 2,
+                text: "Egy településen a polgármester-választáson a győztes jelöltre a szavazáson résztvevők 45%-a szavazott, ami pontosan 5400 szavazatot jelent. Hányan vettek részt összesen a szavazáson?",
+                correctAnswers: ["12000", "12 000", "12.000", "12000fő", "12000 fő"],
+                explanation: "Legyen az összes szavazó $x$. $x \\cdot 0,45 = 5400 \\rightarrow x = \\frac{5400}{0,45} = 12\\,000$."
+            },
+            {
+                id: 10, points: 3,
+                text: "Adott az alábbi öt függvény a valós számok halmazán. Adja meg azoknak a betűjelét, amelyek szigorúan monoton növekvőek a teljes értelmezési tartományukon!<br><br> $f(x) = 2x+1$ ; $g(x) = x^2$ ; $h(x) = 3^x$ ; $i(x) = -x$ ; $j(x) = 5$ <br><br><span class='text-sm text-indigo-700 font-semibold'>(Utasítás: Csak a helyes betűket adja meg vesszővel elválasztva! Pl: g, j)</span>",
+                correctAnswers: ["f,h", "f, h", "f;h", "f; h", "fésh", "h,f", "h;f"],
+                explanation: "A lineáris $f(x) = 2x+1$ (meredekség > 0) és az exponenciális $h(x) = 3^x$ (alap > 1) szigorúan monoton nő. Helyes válasz: f, h."
+            },
+            {
+                id: 11, points: 3,
+                text: "Egy téli, négynapos időszakban a következő napi középhőmérsékleteket mérték (Celsius fokban): -2, 2, 2, -2. Számítsa ki az adatok átlagát és szórását! <br><span class='text-sm text-indigo-700 font-semibold'>(Utasítás: Az átlagot és a szórást pontosvesszővel elválasztva adja meg! Pl: 1; 3)</span>",
+                correctAnswers: ["0; 2", "0, 2", "0;2", "0,2", "átlag:0,szórás:2"],
+                explanation: "Átlag: $\\frac{-2 + 2 + 2 - 2}{4} = 0$. Szórásnégyzet: Az eltérések négyzeteinek (4, 4, 4, 4) átlaga $\\frac{16}{4} = 4$. A szórás ennek a gyöke: $\\sqrt{4} = 2$."
+            },
+            {
+                id: 12, points: 3,
+                text: "Két hagyományos, szabályos dobókockával egyszerre dobunk. Határozza meg annak a valószínűségét, hogy a dobott számok szorzata pontosan 12 lesz! <br><span class='text-sm text-indigo-700 font-semibold'>(Utasítás: Válaszát tört alakban adja meg! Pl: 1/6)</span>",
+                correctAnswers: ["1/9", "4/36"],
+                explanation: "Összes eset: $6 \\cdot 6 = 36$. Kedvező esetek (szorzat 12): $(2; 6), (6; 2), (3; 4), (4; 3)$, azaz 4 darab. $P = \\frac{4}{36} = \\frac{1}{9}$."
+            }
+        ];
+
+        const App = () => {
+            const [answers, setAnswers] = useState({});
+            const [isSubmitted, setIsSubmitted] = useState(false);
+            const [score, setScore] = useState(0);
+
+            const totalPoints = quizData.reduce((acc, q) => acc + q.points, 0);
+
+            useEffect(() => {
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise();
+                }
+            });
+
+            const checkAnswer = (question, userAnswer) => {
+                if (!userAnswer) return false;
+                
+                const cleanUser = userAnswer.toLowerCase().replace(/\s/g, '');
+                return question.correctAnswers.some(ans => 
+                    ans.toLowerCase().replace(/\s/g, '') === cleanUser
+                );
+            };
+
+            const handleInputChange = (questionId, value) => {
+                if(isSubmitted) return;
+                setAnswers({ ...answers, [questionId]: value });
+            };
+
+            const handleSubmit = () => {
+                let currentScore = 0;
+                quizData.forEach(q => {
+                    if (checkAnswer(q, answers[q.id])) {
+                        currentScore += q.points;
+                    }
+                });
+                setScore(currentScore);
+                setIsSubmitted(true);
+            };
+
+            const scorePercentage = Math.round((score / totalPoints) * 100) || 0;
+
+            return (
+                <div className="max-w-4xl mx-auto pb-12">
+                    <div className="sticky top-4 z-50 glass-card rounded-2xl p-6 mb-8 text-center transition-all duration-500">
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2">Matematika Érettségi Feladatsor</h1>
+                        
+                        {isSubmitted ? (
+                            <div className="mt-4">
+                                <div className="text-2xl font-semibold mb-2 text-indigo-900">
+                                    Eredmény: {score} / {totalPoints} pont ({scorePercentage}%)
+                                </div>
+                                <div className="w-full bg-white/50 rounded-full h-4">
+                                    <div 
+                                        className="bg-indigo-500 h-4 rounded-full transition-all duration-1000 ease-out" 
+                                        style={{ width: `${scorePercentage}%` }}>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-slate-600 font-medium">Oldd meg a feladatokat, írd be a válaszokat, majd nyomd meg a Kiértékelés gombot!</p>
+                        )}
+                    </div>
+
+                    <div className="space-y-6">
+                        {quizData.map((q, index) => {
+                            const userAnswer = answers[q.id] || "";
+                            const isCorrect = isSubmitted ? checkAnswer(q, userAnswer) : null;
+                            
+                            let cardBorder = "border-white/40";
+                            if (isSubmitted) {
+                                cardBorder = isCorrect ? "border-green-400 bg-green-50/20" : "border-red-400 bg-red-50/20";
+                            }
+
+                            return (
+                                <div key={q.id} className={`glass-card rounded-2xl p-6 transition-all duration-300 ${cardBorder}`}>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h2 className="text-lg font-bold text-slate-800 flex-1">
+                                            {index + 1}. feladat
+                                        </h2>
+                                        <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded ml-3 shrink-0">
+                                            {q.points} pont
+                                        </span>
+                                    </div>
+                                    
+                                    <p className="text-slate-700 mb-5 text-lg" dangerouslySetInnerHTML={{ __html: q.text }} />
+
+                                    <div className="mb-4">
+                                        <input 
+                                            type="text" 
+                                            disabled={isSubmitted}
+                                            value={userAnswer}
+                                            onChange={(e) => handleInputChange(q.id, e.target.value)}
+                                            placeholder="Írd ide a végeredményt..."
+                                            className="w-full md:w-3/4 px-4 py-3 rounded-lg border border-white/50 bg-white/50 focus:bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors disabled:opacity-70 text-lg"
+                                        />
+                                    </div>
+
+                                    {isSubmitted && (
+                                        <div className={`mt-4 p-4 rounded-xl ${isCorrect ? 'bg-green-100/70 border border-green-200' : 'bg-red-100/70 border border-red-200'}`}>
+                                            <div className="flex items-center mb-2">
+                                                <span className="text-xl mr-2">{isCorrect ? '✅' : '❌'}</span>
+                                                <span className={`font-bold ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                                                    {isCorrect ? `Helyes válasz! Megkaptad a ${q.points} pontot.` : 'Helytelen válasz!'}
+                                                </span>
+                                            </div>
+                                            <div className="text-slate-700 mt-2">
+                                                <strong className="block mb-1">Javítási útmutató / Magyarázat:</strong>
+                                                <span dangerouslySetInnerHTML={{ __html: q.explanation }} />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {!isSubmitted && (
+                        <div className="mt-8 text-center">
+                            <button 
+                                onClick={handleSubmit}
+                                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 text-xl"
+                            >
+                                Kiértékelés
+                            </button>
+                        </div>
+                    )}
+                    
+                    {isSubmitted && (
+                        <div className="mt-8 text-center">
+                            <button 
+                                onClick={() => window.location.reload()}
+                                className="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-10 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 text-xl"
+                            >
+                                Újrapróbálom
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
