@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arányos Osztás - Interaktív Feladatlap</title>
+    
+    <!-- Tailwind CSS a modern és reszponzív dizájnhoz -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- MathJax konfiguráció a LaTeX formulák ($...$) megjelenítéséhez -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <style>
+        body { background-color: #f3f4f6; }
+        .correct-bg { background-color: #d1fae5; border-color: #10b981; border-width: 1px; }
+        .incorrect-bg { background-color: #fee2e2; border-color: #ef4444; border-width: 1px; }
+    </style>
+</head>
+<body class="text-gray-800 font-sans antialiased p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-blue-800 mb-2">Arányos Osztás és Alkalmazásai</h1>
+            <p class="text-gray-600">Oldd meg a feladatokat és írd be a végeredményt az üres mezőkbe! A gomb megnyomásával ellenőrizheted a válaszodat.</p>
+            <div class="mt-4 inline-block bg-white px-4 py-2 rounded shadow text-lg font-semibold text-blue-700">
+                Eredmény: <span id="scoreDisplay">0</span> / 15
+            </div>
+        </header>
+
+        <main id="quizContainer" class="space-y-6">
+            <!-- A feladatok ide fognak betöltődni JavaScript segítségével -->
+        </main>
+    </div>
+
+    <script>
+        // A feladatok adatbázisa
+        const questions = [
+            {
+                id: 1,
+                text: "Egy háromszög oldalainak aránya $4:5:8$, a kerülete pedig $51 \\text{ cm}$. Milyen hosszú a háromszög legrövidebb oldala?",
+                expected: "12",
+                rationale: "A részek összege $4+5+8=17$. Az egy részre jutó hossz $51 / 17 = 3 \\text{ cm}$. A legrövidebb oldal így $4 \\cdot 3 = 12 \\text{ cm}$.",
+                hint: "Jelöld az oldalakat $4x$, $5x$ és $8x$ formában, majd írd fel a kerületre vonatkozó egyenletet!"
+            },
+            {
+                id: 2,
+                text: "Egy háromszög belső szögeinek aránya $2:3:4$. Mekkora a háromszög legnagyobb szöge?",
+                expected: "80",
+                rationale: "A belső szögek összege $180^{\\circ}$. Az összes rész $2+3+4=9$. Egy rész $20^{\\circ}$, a legnagyobb szög $4 \\cdot 20^{\\circ} = 80^{\\circ}$.",
+                hint: "Használd fel, hogy a háromszög belső szögeinek összege mindig állandó érték ($180^{\\circ}$)!"
+            },
+            {
+                id: 3,
+                text: "$120\\ 000 \\text{ Ft}$-ot kell szétosztani Anna, Béla és Csaba között $3:4:5$ arányban. Mennyi pénzt kap Béla?",
+                expected: "40000",
+                rationale: "Az összes rész $3+4+5=12$. Egy rész $10\\ 000 \\text{ Ft}$, így Bélának $4 \\cdot 10\\ 000 = 40\\ 000 \\text{ Ft}$ jut.",
+                hint: "Számold ki, összesen hány 'részre' kell osztani a teljes összeget, majd nézd meg, Bélának mennyi jut ebből."
+            },
+            {
+                id: 4,
+                text: "Két testvér életkorának aránya $3:5$. A koruk összege $32$ év. Hány éves a fiatalabb testvér?",
+                expected: "12",
+                rationale: "A $3+5=8$ rész összesen $32$ év, így $1$ rész $4$ év. A fiatalabb testvér $3 \\cdot 4 = 12$ éves.",
+                hint: "Az életkorok összege az arányszámok összegének felel meg."
+            },
+            {
+                id: 5,
+                text: "Egy négyszög belső szögeinek aránya $1:2:3:4$. Mekkora a négyszög legkisebb szöge?",
+                expected: "36",
+                rationale: "A belső szögek összege $360^{\\circ}$. A $10$ rész ($1+2+3+4$) $360^{\\circ}$-ot ad, így az $1$ rész éppen $36^{\\circ}$.",
+                hint: "Gondolj arra, mennyi a négyszögek belső szögeinek összege!"
+            },
+            {
+                id: 6,
+                text: "Egy $84 \\text{ cm}$ hosszú szakaszt $3:4$ arányban két részre osztunk. Milyen hosszú a hosszabbik rész?",
+                expected: "48",
+                rationale: "A $7$ rész ($3+4$) hossza $84 \\text{ cm}$, egy rész $12 \\text{ cm}$. A hosszabb rész $4 \\cdot 12 = 48 \\text{ cm}$.",
+                hint: "Határozd meg, hogy összesen hány egységből áll a szakasz, majd számold ki a nagyobbik egységhez tartozó hosszt."
+            },
+            {
+                id: 7,
+                text: "Egy sárgaréz ötvözetben a réz és a cink tömegének aránya $7:3$. Mennyi cink van egy $50 \\text{ kg}$-os ötvözetben?",
+                expected: "15",
+                rationale: "Az összesen $10$ rész $50 \\text{ kg}$-ot jelent, így egy rész $5 \\text{ kg}$. A cink $3$ részt tesz ki, tehát $3 \\cdot 5 = 15 \\text{ kg}$.",
+                hint: "Figyelj arra, hogy az aránypár melyik tagja vonatkozik a cinkre!"
+            },
+            {
+                id: 8,
+                text: "Két szám aránya $4:7$, a különbségük pedig $21$. Melyik a nagyobb szám?",
+                expected: "49",
+                rationale: "A két arányszám különbsége $7x - 4x = 3x$. A $3x = 21$ egyenletből $x=7$. A nagyobb szám $7 \\cdot 7 = 49$.",
+                hint: "Most nem az összeget, hanem az arányszámok különbségét kell a megadott értékkel ($21$) azonosítanod."
+            },
+            {
+                id: 9,
+                text: "Egy derékszögű háromszög hegyesszögeinek aránya $1:5$. Mekkora a nagyobbik hegyesszög?",
+                expected: "75",
+                rationale: "A két hegyesszög összege $90^{\\circ}$. Hat rész ad ki $90^{\\circ}$-ot, így $1$ rész $15^{\\circ}$. A nagyobb szög $5 \\cdot 15^{\\circ} = 75^{\\circ}$.",
+                hint: "Mennyi a derékszögű háromszögek két hegyesszögének összege?"
+            },
+            {
+                id: 10,
+                text: "Egy téglalap szomszédos oldalainak aránya $2:3$, kerülete $60 \\text{ cm}$. Mekkora a téglalap területe?",
+                expected: "216",
+                rationale: "A kerület $2(2x+3x) = 10x = 60$, tehát $x=6$. Az oldalak $12 \\text{ cm}$ és $18 \\text{ cm}$. A terület $12 \\cdot 18 = 216 \\text{ cm}^2$.",
+                hint: "Először számold ki az oldalak hosszát a kerület képletéből ($K = 2(a+b)$), majd utána a területet."
+            },
+            {
+                id: 11,
+                text: "Egy sütemény receptje szerint a liszt, a cukor és a vaj tömegének aránya $5:3:2$. Ha $400 \\text{ g}$ vajat használunk, mennyi lisztre van szükség?",
+                expected: "1000",
+                rationale: "A vaj a $2$ részt jelenti, ami $400 \\text{ g}$, így $1$ rész $200 \\text{ g}$. A liszt $5$ része így $5 \\cdot 200 = 1000 \\text{ g}$.",
+                hint: "Tudd meg, hogy egyetlen 'rész' hány grammot jelent a vaj megadott mennyisége alapján."
+            },
+            {
+                id: 12,
+                text: "Három munkás teljesítményének aránya $2:3:5$. Egy műszak alatt összesen $150$ alkatrészt gyártottak le. Hány darabot készített a legszorgalmasabb munkás?",
+                expected: "75",
+                rationale: "Az összes rész $2+3+5=10$. A $10$ rész $150$ darab, így $1$ rész $15$. A legszorgalmasabb munkás $5 \\cdot 15 = 75$ darabot gyártott.",
+                hint: "Keresd meg az összteljesítményhez tartozó részek számát."
+            },
+            {
+                id: 13,
+                text: "Egy egyenlő szárú háromszög alapjának és egyik szárának aránya $4:3$. A kerülete $50 \\text{ cm}$. Milyen hosszú az alap?",
+                expected: "20",
+                rationale: "A háromszög oldalai $4x$, $3x$ és $3x$. A kerület $10x = 50$, tehát $x = 5$. Az alap hossza $4 \\cdot 5 = 20 \\text{ cm}$.",
+                hint: "Ne feledd, az egyenlő szárú háromszögnek két egyforma hosszú szára van!"
+            },
+            {
+                id: 14,
+                text: "Két kör sugarának aránya $2:5$. Milyen arányban állnak a területeik?",
+                expected: "4:25",
+                rationale: "Mivel a terület a sugár négyzetétől függ, a hasonlósági arány négyzetre emelésével kapjuk meg a területek arányát: $2^2 : 5^2 = 4:25$.",
+                hint: "A kör területe a sugár négyzetével arányos ($T = r^2 \\pi$). Ne felejtsd el az arányt kettősponttal megadni (pl. x:y)!"
+            },
+            {
+                id: 15,
+                text: "Egy háromszög külső szögeinek aránya $4:5:6$. Mekkora a háromszög legkisebb belső szöge?",
+                expected: "36",
+                rationale: "A külső szögek összege $360^{\\circ}$. A $15$ rész ($4+5+6$) egy része $24^{\\circ}$. A külső szögek $96^{\\circ}$, $120^{\\circ}$, $144^{\\circ}$. A belső szögek így $84^{\\circ}$, $60^{\\circ}$ és $36^{\\circ}$. A legkisebb $36^{\\circ}$.",
+                hint: "A külső szögek összege mindig $360^{\\circ}$. Számold ki ezeket, majd a belső szögeket kiegészítéssel kapod meg ($180^{\\circ} - \\alpha'$)."
+            }
+        ];
+
+        let score = 0;
+        let answeredQuestions = new Set();
+
+        // Segédfüggvény a válaszok "tisztítására" (szóközök, mértékegységek eltávolítása)
+        function normalizeAnswer(input) {
+            if (!input) return "";
+            return input.toLowerCase()
+                        .replace(/[\s\.]/g, '') // szóközök és pontok (ezres elválasztó) eltávolítása
+                        .replace(/(cm\^2|cm|ft|év|g|kg|fok|°)/g, ''); // gyakori mértékegységek eltávolítása
+        }
+
+        // Felület felépítése
+        function renderQuiz() {
+            const container = document.getElementById('quizContainer');
+            
+            questions.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500";
+                card.id = `card-${q.id}`;
+                
+                card.innerHTML = `
+                    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                        <div class="flex-1">
+                            <h2 class="text-lg font-bold text-gray-700 mb-2">${index + 1}. Feladat</h2>
+                            <p class="text-gray-800 text-lg mb-4">${q.text}</p>
+                            
+                            <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                                <input type="text" id="input-${q.id}" class="border-2 border-gray-300 rounded px-3 py-2 w-full sm:w-48 focus:outline-none focus:border-blue-500" placeholder="Ide írd a választ...">
+                                <button onclick="checkAnswer(${q.id})" id="btn-${q.id}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition duration-200">
+                                    Ellenőrzés
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="feedback-${q.id}" class="mt-4 p-4 rounded hidden"></div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Válasz ellenőrzése
+        window.checkAnswer = function(id) {
+            const inputEl = document.getElementById(`input-${id}`);
+            const feedbackEl = document.getElementById(`feedback-${id}`);
+            const btnEl = document.getElementById(`btn-${id}`);
+            const cardEl = document.getElementById(`card-${id}`);
+            
+            const question = questions.find(q => q.id === id);
+            const rawUserAnswer = inputEl.value;
+            const normalizedUserAnswer = normalizeAnswer(rawUserAnswer);
+            const expectedAnswer = normalizeAnswer(question.expected);
+
+            feedbackEl.classList.remove('hidden', 'correct-bg', 'incorrect-bg');
+            
+            if (normalizedUserAnswer === expectedAnswer) {
+                // Helyes válasz
+                feedbackEl.classList.add('correct-bg');
+                feedbackEl.innerHTML = `
+                    <div class="flex items-center gap-2 text-green-800 font-bold mb-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Helyes válasz!
+                    </div>
+                    <div class="text-green-900">${question.rationale}</div>
+                `;
+                inputEl.disabled = true;
+                btnEl.disabled = true;
+                btnEl.classList.replace('bg-blue-600', 'bg-gray-400');
+                btnEl.classList.replace('hover:bg-blue-700', 'cursor-not-allowed');
+                cardEl.classList.replace('border-blue-500', 'border-green-500');
+                
+                if (!answeredQuestions.has(id)) {
+                    score++;
+                    answeredQuestions.add(id);
+                    document.getElementById('scoreDisplay').innerText = score;
+                }
+            } else {
+                // Helytelen válasz
+                feedbackEl.classList.add('incorrect-bg');
+                feedbackEl.innerHTML = `
+                    <div class="flex items-center gap-2 text-red-800 font-bold mb-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        Nem teljesen jó, próbáld újra!
+                    </div>
+                    <div class="text-red-900 font-semibold mt-2">Tipp:</div>
+                    <div class="text-red-800 italic">${question.hint}</div>
+                `;
+            }
+
+            // Mivel új HTML tartalmat generáltunk (a visszajelzésekben is lehet LaTeX), 
+            // szólunk a MathJax-nak, hogy renderelje újra a módosított részt.
+            if (window.MathJax) {
+                MathJax.typesetPromise([feedbackEl]);
+            }
+        };
+
+        // Indítás: DOM betöltése után generáljuk a felületet
+        window.onload = function() {
+            renderQuiz();
+        };
+    </script>
+</body>
+</html>
+```
