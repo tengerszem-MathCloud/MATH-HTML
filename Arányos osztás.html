@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arányos Osztás - Interaktív Feladatlap</title>
     
-    <!-- Tailwind CSS a modern és reszponzív dizájnhoz -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- MathJax konfiguráció a LaTeX formulák ($...$) megjelenítéséhez -->
     <script>
         MathJax = {
             tex: {
@@ -42,8 +40,7 @@
         </header>
 
         <main id="quizContainer" class="space-y-6">
-            <!-- A feladatok ide fognak betöltődni JavaScript segítségével -->
-        </main>
+            </main>
     </div>
 
     <script>
@@ -244,8 +241,6 @@
                 `;
             }
 
-            // Mivel új HTML tartalmat generáltunk (a visszajelzésekben is lehet LaTeX), 
-            // szólunk a MathJax-nak, hogy renderelje újra a módosított részt.
             if (window.MathJax) {
                 MathJax.typesetPromise([feedbackEl]);
             }
@@ -254,8 +249,12 @@
         // Indítás: DOM betöltése után generáljuk a felületet
         window.onload = function() {
             renderQuiz();
+            
+            // JAVÍTÁS: Utasítjuk a MathJax-ot, hogy renderelje le a frissen beillesztett feladatokat
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
         };
     </script>
 </body>
 </html>
-```
